@@ -19,9 +19,14 @@
 
 package com.google.checkstyle.test.chapter4formatting.rule43onestatement;
 
+import com.google.googlejavaformat.java.Formatter;
 import org.junit.jupiter.api.Test;
 
 import com.google.checkstyle.test.base.AbstractGoogleModuleTestSupport;
+
+import java.nio.file.Files;
+import java.nio.file.Path;
+import java.nio.file.Paths;
 
 public class OneStatementPerLineTest extends AbstractGoogleModuleTestSupport {
 
@@ -48,4 +53,19 @@ public class OneStatementPerLineTest extends AbstractGoogleModuleTestSupport {
         verifyWithConfigParser(MODULE, filePath);
     }
 
+    @Test
+    public void testNoViolationsAfterApplyingGoogleJavaFormat() throws Exception {
+        final String filePath = getPath("InputOneStatementPerLine.java");
+        verifyWithConfigParser(MODULE, filePath);
+
+        final String original = Files.readString(Paths.get(filePath));
+        final String formatted = new Formatter().formatSource(original);
+        Path formattedFile = Files.createTempFile("checkstyle", ".java");
+        try {
+            Files.write(formattedFile, formatted.replaceAll("violation", "fixed").getBytes());
+            verifyWithConfigParser(MODULE, formattedFile.toAbsolutePath().toString());
+        } finally {
+            Files.deleteIfExists(formattedFile);
+        }
+    }
 }
